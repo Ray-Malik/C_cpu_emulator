@@ -117,12 +117,12 @@ void halt(struct CPU *cpu) {
 
 int main() {
     //hard coded program
-    int program[] = { LOAD, 0, 5,  LOAD, 1, 10,  ADD, 2, 1, 0,  PRINT, 2,  HALT };
+    int program[] = { (LOAD << 24)| (0 << 16)| (5<<8),  (LOAD << 24)|(1 << 16)| (10<<8), (ADD << 24) | (2 << 16)| (1<<8)| (0) ,  (PRINT<<24)|(2<<16),  (HALT<<24)};
     int len_program = sizeof(program) / sizeof(program[0]);
 
 
     //create a cpu struct pointer. calloc initialized everything to 0
-    // cpu          // 0x5000  (the address)
+    // cpu          // 0x5000  (the address).
     // *cpu         // the entire struct at 0x5000
     // cpu->pc      // the pc field inside the struct at 0x5000
     // (*cpu).pc    // exact same thing, just uglier
