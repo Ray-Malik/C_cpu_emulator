@@ -7,6 +7,7 @@ struct CPU {
     int memory[256];
     int pc;           // program counter — tracks which instruction we're on
     int running;
+    int instruction; // the current instruction that you are executing
 };
 
 //print all registers and some memory
@@ -34,48 +35,49 @@ void load(struct CPU *cpu) {
 
     printf("calling load\n");
 
-    //get which register to load the number into    
-    int register_num = cpu->memory[cpu->pc + 1];
+    //decode the register number from the instruction
+    int register_num = (cpu->instruction >> 16) & 0xFF;
+
     //number to load into register
-    int value =   cpu->memory[cpu->pc + 2];
+    int value =   (cpu->instruction >> 8) & 0xFF;
  
-
-
     //either one is correct. the -> is more industry standard (accessing field of what struct you are pointing to)
     //(*cpu).registers[register_num] = value;
     //store the value in the register
     cpu -> registers[register_num] = value;
 
     //update counter 
-    cpu->pc += 3;
+    cpu->pc += 1;
 }
 
-//load a value into the given register 
+//add 2 register values and store that value in a specified register
 void add(struct CPU *cpu) {
 
     printf("calling add\n");
 
-    //get the register you want the sum to be stored in
-    int reg_destination =  cpu->memory[cpu->pc + 1];
+    //decode the register number from the instruction
+    int reg_destination = (cpu->instruction >> 16) & 0xFF;
+
 
     //registers to add
-    int register_num1 =  cpu->memory[cpu->pc + 2];
-    int register_num2 = cpu->memory[cpu->pc + 3];
+    int register_num1 =   (cpu->instruction >> 8) & 0xFF;
+    int register_num2 =  (cpu->instruction) & 0xFF;
 
     //add the registers and store it in register destination
     cpu -> registers[reg_destination] = cpu -> registers[register_num1] + cpu -> registers[register_num2];
-    cpu->pc += 4;
+    cpu->pc += 1;
 }
-//load a value into the given register 
+
+//print a register value 
 void print_reg_value(struct CPU *cpu) {
     printf("calling PRINT\n");
     
     //register to print
-    int register_num = cpu->memory[cpu->pc+1];
+    int register_num = (cpu->instruction >> 16) & 0xFF;
     //value of the register
     int value = cpu -> registers[register_num];
 
-    cpu->pc += 2;
+    cpu->pc += 1;
 
     printf("the value of register number %d is %d \n", register_num, value);
 }
@@ -147,9 +149,15 @@ int main() {
     //while loop that goes over whole program in memory
     cpu->running = 1;
     while (cpu->running) {
-        //get the opcode that the pointer is pointing to in  memory
-        int opcode = cpu->memory[cpu->pc];
-        
+        //get the opcode from the binary instruction inside memory
+        int instruction = cpu ->memory[cpu->pc];
+
+        //store the instructin in the cpu struct 
+        cpu->instruction = instruction;
+
+        //extract the opcode from that instruction 
+        int opcode = (instruction >> 24) & 0xFF; 
+
         //call the correct function given the opcode (look up the opcode in the array of function pointers)
         cpu_functions[opcode](cpu);
        
